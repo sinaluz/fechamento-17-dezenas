@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roleta Virtual - 25 Números</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(to right, #f0e6f6, #d6e4ff);
+        }
+        .simulacao {
+            background-color: white;
+            padding: 20px;
+            margin: 30px auto;
+            border-radius: 15px;
+            max-width: 500px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            width: 80%;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+        .erro {
+            color: red;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            background-color: #3498db;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin: 5px;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .numero {
+            display: inline-block;
+            margin: 5px;
+            padding: 15px;
+            background-color: #ecf0f1;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            font-size: 20px;
+            animation: fadeIn 0.5s ease-in;
+        }
+        .resultado.combinado .numero {
+            background-color: #f1c40f;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @media (max-width: 600px) {
+            .simulacao {
+                max-width: 90%;
+            }
+            input[type="text"] {
+                width: 100%;
+            }
+            .numero {
+                width: 40px;
+                height: 40px;
+                line-height: 40px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Roleta Virtual - 25 Totens</h1>
+    <div class="simulacao">
+        <h2>Simulação A: 15 totens (de 25) → Sortear 10</h2>
+        <input type="text" id="entradaA" aria-label="15 números de 1 a 25" placeholder="Digite 15 totens ou gere aleatoriamente">
+        <div id="erroA" class="erro"></div>
+        <button onclick="gerarNumerosAleatorios('entradaA', 15)">Gerar 15 Aleatórios</button>
+        <button onclick="sortearA()">Sortear 10</button>
+        <div id="resultadoA" class="resultado" aria-live="polite"></div>
+    </div>
+    <div class="simulacao">
+        <h2>Simulação B: 10 totens (de 25) → Sortear 7</h2>
+        <input type="text" id="entradaB" aria-label="10 números de 1 a 25" placeholder="Digite 10 totens ou gere aleatoriamente">
+        <div id="erroB" class="erro"></div>
+        <button onclick="gerarNumerosAleatorios('entradaB', 10)">Gerar 10 Aleatórios</button>
+        <button onclick="sortearB()">Sortear 7</button>
+        <div id="resultadoB" class="resultado" aria-live="polite"></div>
+    </div>
+    <div class="simulacao">
+        <h2>Resultado Combinado: 17 totens (10 de A + 7 de B)</h2>
+        <button onclick="sortearCombinado()">Sortear Combinado</button>
+        <div id="resultadoCombinado" class="resultado" aria-live="polite"></div>
+    </div>
+    <script>
+        const Roleta = {
+            // Conjunto base de 25 números (totens)
+            numerosBase: Array.from({length: 25}, (_, i) => i + 1), // [1, 2, ..., 25]
+
+            validarEntrada(entrada, quantidadeEsperada) {
+                let numeros = entrada.split(',')
+                    .map(n => parseInt(n.trim()))
+                    .filter(n => !isNaN(n) && n >= 1 && n <= 25);
+                let numerosUnicos = new Set(numeros);
+                if (numeros.length !== quantidadeEsperada) {
+                    return { valido: false, mensagem: Insira exatamente ${quantidadeEsperada} totens válidos (1 a 25). };
+                }
+                if (numerosUnicos.size !== numeros.length) {
+                    return { valido: false, mensagem: 'Os totens não podem ser duplicados.' };
+                }
+                if (!numeros.every(n => this.numerosBase.includes(n))) {
+                    return { valido: false, mensagem: 'Os totens devem estar entre 1 e 25.' };
+                }
+                return { valido: true, numeros };
+            },
+            sortearNumeros(lista, quantidade) {
+                let array = [...lista];
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array.slice(0, quantidade);
+            },
+            gerarNumerosAleatorios(entradaId, quantidade) {
+                let disponiveis = entradaId === 'entradaB' 
+                    ? this.numerosBase.filter(n => !document.getElementById('entradaA').value.split(',').map(Number).includes(n))
+                    : this.numerosBase;
+                if (disponiveis.length < quantidade) {
+                    document.getElementById(erro${entradaId.slice(-1)}).innerText = 
+                        'Não há totens suficientes disponíveis. Gere novos totens para A primeiro.';
+                    return;
+                }
+                let selecionados = this.sortearNumeros(disponiveis, quantidade);
+                document.getElementById(entradaId).value = selecionados.join(',');
+                document.getElementById(erro${entradaId.slice(-1)}).innerText = '';
+            },
+            mostrarResultado(containerId, numeros) {
+                const container = document.getElementById(containerId);
+                // Ordenar números para melhor legibilidade
+                const numerosOrdenados = [...numeros].sort((a, b) => a - b);
+                container.innerHTML = numerosOrdenados.map(n => <div class="numero">${n}</div>).join('');
+                if (containerId === 'resultadoCombinado') {
+                    container.classList.add('combinado');
+                } else {
+                    container.classList.remove('combinado');
+                }
+            },
+            sortearSimulacao(entradaId, resultadoId, erroId, quantidadeEsperada, quantidadeSorteada) {
+                const entrada = document.getElementById(entradaId).value;
+                const erroContainer = document.getElementById(erroId);
+                const botao = document.querySelector(#${entradaId} ~ button:last-of-type);
+                botao.disabled = true;
+                botao.innerText = 'Sorteando...';
+                setTimeout(() => {
+                    const validacao = this.validarEntrada(entrada, quantidadeEsperada);
+                    if (!validacao.valido) {
+                        erroContainer.innerText = validacao.mensagem;
+                        botao.disabled = false;
+                        botao.innerText = Sortear ${quantidadeSorteada};
+                        return;
+                    }
+                    erroContainer.innerText = '';
+                    let resultado = this.sortearNumeros(validacao.numeros, quantidadeSorteada);
+                    this.mostrarResultado(resultadoId, resultado);
+                    botao.disabled = false;
+                    botao.innerText = Sortear ${quantidadeSorteada};
+                }, 100);
+            },
+            sortearCombinado() {
+                const entradaA = document.getElementById('entradaA').value;
+                const entradaB = document.getElementById('entradaB').value;
+                const erroA = document.getElementById('erroA');
+                const erroB = document.getElementById('erroB');
+                const botao = document.querySelector('#resultadoCombinado').previousElementSibling;
+
+                botao.disabled = true;
+                botao.innerText = 'Sorteando...';
+
+                setTimeout(() => {
+                    // Validar Simulação A
+                    const validacaoA = this.validarEntrada(entradaA, 15);
+                    if (!validacaoA.valido) {
+                        erroA.innerText = validacaoA.mensagem;
+                        botao.disabled = false;
+                        botao.innerText = 'Sortear Combinado';
+                        return;
+                    }
+                    erroA.innerText = '';
+
+                    // Validar Simulação B
+                    const validacaoB = this.validarEntrada(entradaB, 10);
+                    if (!validacaoB.valido) {
+                        erroB.innerText = validacaoB.mensagem;
+                        botao.disabled = false;
+                        botao.innerText = 'Sortear Combinado';
+                        return;
+                    }
+                    erroB.innerText = '';
+
+                    // Sortear 10 números da Simulação A
+                    const numerosA = this.sortearNumeros(validacaoA.numeros, 10);
+                    // Sortear 7 números da Simulação B
+                    const numerosB = this.sortearNumeros(validacaoB.numeros, 7);
+
+                    // Combinar os números (não haverá duplicatas, pois A e B são disjuntos)
+                    const numerosCombinados = [...numerosA, ...numerosB];
+
+                    // Exibir resultados individuais
+                    this.mostrarResultado('resultadoA', numerosA);
+                    this.mostrarResultado('resultadoB', numerosB);
+
+                    // Exibir resultado combinado
+                    this.mostrarResultado('resultadoCombinado', numerosCombinados);
+
+                    // Verificar se temos exatamente 17 números
+                    if (numerosCombinados.length !== 17) {
+                        document.getElementById('resultadoCombinado').innerHTML = 
+                            <div class="erro">Erro: Obtidos ${numerosCombinados.length} totens. Verifique as entradas.</div>;
+                    }
+
+                    botao.disabled = false;
+                    botao.innerText = 'Sortear Combinado';
+                }, 100);
+            }
+        };
+
+        function sortearA() {
+            Roleta.sortearSimulacao('entradaA', 'resultadoA', 'erroA', 15, 10);
+        }
+
+        function sortearB() {
+            Roleta.sortearSimulacao('entradaB', 'resultadoB', 'erroB', 10, 7);
+        }
+
+        function sortearCombinado() {
+            Roleta.sortearCombinado();
+        }
+
+        function gerarNumerosAleatorios(entradaId, quantidade) {
+            Roleta.gerarNumerosAleatorios(entradaId, quantidade);
+        }
+
+        document.getElementById('entradaA').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sortearA();
+        });
+
+        document.getElementById('entradaB').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sortearB();
+        });
+    </script>
+</body>
+</html>
