@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel de Conexões</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #e0eafc, #cfdef3);
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #003366;
+      margin-bottom: 10px;
+    }
+    .btn-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .btn-container button {
+      padding: 10px 20px;
+      margin: 0 10px;
+      font-weight: bold;
+      border-radius: 8px;
+      border: none;
+      background-color: #0077cc;
+      color: white;
+      cursor: pointer;
+    }
+    .btn-container button.active {
+      background-color: #004080;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: auto;
+      background-color: #ffffffcc;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    th, td {
+      padding: 8px;
+      text-align: center;
+    }
+    input {
+      width: 50px;
+      padding: 5px;
+      text-align: center;
+      border-radius: 5px;
+      border: 1px solid #999;
+      font-weight: bold;
+      color: #000;
+      background-color: #ccffcc;
+    }
+    input.x-mark {
+      background-color: #ff4d4d;
+      color: white;
+      border: 1px solid #990000;
+    }
+    th {
+      font-weight: bold;
+      color: #fff;
+      background-color: #0077cc;
+    }
+    .row-label {
+      font-weight: bold;
+      color: #fff;
+      background-color: #333;
+    }
+    .num-row {
+      background-color: #ddd;
+      font-weight: bold;
+    }
+    #contador {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: #003366;
+    }
+  </style>
+</head>
+<body>
+  <h1>PAINEL DE CONEXÕES</h1>
+
+  <div class="btn-container">
+    <button onclick="trocarCasa('casa10')" id="btn10" class="active">Casa 10</button>
+    <button onclick="trocarCasa('casa11')" id="btn11">Casa 11</button>
+  </div>
+
+  <table id="painel">
+    <thead>
+      <tr>
+        <th></th>
+        <th colspan="24">Portas</th>
+      </tr>
+      <tr>
+        <th></th>
+        <!-- Numerando colunas -->
+        <script>
+          for (let i = 1; i <= 24; i++) {
+            document.write(`<th>${i}</th>`);
+          }
+        </script>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Linhas A a D -->
+      <script>
+        for (let letra of ['A', 'B', 'C', 'D']) {
+          document.write(`<tr><td class="row-label">${letra}</td>`);
+          for (let i = 1; i <= 24; i++) {
+            document.write(`<td><input id="${letra.toLowerCase()}${i}" oninput="salvar(this)"></td>`);
+          }
+          document.write('</tr>');
+          document.write('<tr><td></td>');
+          for (let i = 1; i <= 24; i++) {
+            document.write(`<td class="num-row">${i}</td>`);
+          }
+          document.write('</tr>');
+        }
+      </script>
+    </tbody>
+  </table>
+
+  <div id="contador">Conectados: 0 | Desconectados: 0</div>
+
+  <script>
+    let casaAtual = 'casa10';
+
+    function salvar(input) {
+      localStorage.setItem(`${casaAtual}_${input.id}`, input.value);
+      aplicarEstiloX(input);
+      atualizarContador();
+    }
+
+    function carregar() {
+      const letras = ['a', 'b', 'c', 'd'];
+      for (let letra of letras) {
+        for (let i = 1; i <= 24; i++) {
+          const id = letra + i;
+          const valor = localStorage.getItem(`${casaAtual}_${id}`);
+          const campo = document.getElementById(id);
+          campo.value = valor || '';
+          aplicarEstiloX(campo);
+        }
+      }
+      atualizarContador();
+    }
+
+    function aplicarEstiloX(input) {
+      if (input.value.trim().toLowerCase() === 'x') {
+        input.classList.add('x-mark');
+      } else {
+        input.classList.remove('x-mark');
+      }
+    }
+
+    function atualizarContador() {
+      const inputs = document.querySelectorAll('input');
+      let conectados = 0;
+      let desconectados = 0;
+      inputs.forEach(input => {
+        if (input.value.trim().toLowerCase() === 'x') {
+          desconectados++;
+        } else {
+          conectados++;
+        }
+      });
+      document.getElementById('contador').innerText =
+        `Conectados: ${conectados} | Desconectados: ${desconectados}`;
+    }
+
+    function trocarCasa(novaCasa) {
+      casaAtual = novaCasa;
+      carregar();
+
+      // Atualiza botão ativo
+      document.getElementById('btn10').classList.remove('active');
+      document.getElementById('btn11').classList.remove('active');
+      document.getElementById(novaCasa === 'casa10' ? 'btn10' : 'btn11').classList.add('active');
+    }
+
+    window.onload = carregar;
+  </script>
+</body>
+</html>
