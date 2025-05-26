@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inventário de Equipamentos</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #1b2b34;
+      color: white;
+      padding: 20px;
+    }
+    form {
+      background: #2c3e50;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    input {
+      margin: 5px;
+      padding: 5px;
+      width: 120px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #34495e;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #2c3e50;
+      text-align: center;
+    }
+    th {
+      background: #16a085;
+    }
+    .btn-excluir {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-excluir:hover {
+      background: #c0392b;
+    }
+    .totais {
+      font-weight: bold;
+      background: #1abc9c;
+    }
+  </style>
+</head>
+<body>
+  <h1>📋 Inventário de Equipamentos</h1>
+
+  <form method="POST">
+    <input type="text" name="comodo" placeholder="Cômodo" required />
+    <input type="number" name="pc" placeholder="PCs" />
+    <input type="number" name="notebook" placeholder="Notebooks" />
+    <input type="number" name="monitor" placeholder="Monitores" />
+    <input type="number" name="mouse" placeholder="Mouses" />
+    <input type="number" name="teclado" placeholder="Teclados" />
+    <input type="number" name="webcam" placeholder="Webcams" />
+    <input type="number" name="hd" placeholder="HDs" />
+    <input type="number" name="projetor" placeholder="Projetores" />
+    <button type="submit">Adicionar</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Cômodo</th>
+        <th>PCs</th>
+        <th>Notebooks</th>
+        <th>Monitores</th>
+        <th>Mouses</th>
+        <th>Teclados</th>
+        <th>Webcams</th>
+        <th>HDs</th>
+        <th>Projetores</th>
+        <th>Excluir</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in equipamentos %}
+      <tr>
+        <td>{{ item.comodo }}</td>
+        <td>{{ item.pc or '-' }}</td>
+        <td>{{ item.notebook or '-' }}</td>
+        <td>{{ item.monitor or '-' }}</td>
+        <td>{{ item.mouse or '-' }}</td>
+        <td>{{ item.teclado or '-' }}</td>
+        <td>{{ item.webcam or '-' }}</td>
+        <td>{{ item.hd or '-' }}</td>
+        <td>{{ item.projetor or '-' }}</td>
+        <td>
+          <form action="/delete/{{ loop.index0 }}" method="POST" style="margin:0;">
+            <button type="submit" class="btn-excluir">Excluir</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if equipamentos %}
+      <tr class="totais">
+        <td>Total</td>
+        <td>{{ totais.pc }}</td>
+        <td>{{ totais.notebook }}</td>
+        <td>{{ totais.monitor }}</td>
+        <td>{{ totais.mouse }}</td>
+        <td>{{ totais.teclado }}</td>
+        <td>{{ totais.webcam }}</td>
+        <td>{{ totais.hd }}</td>
+        <td>{{ totais.projetor }}</td>
+        <td>-</td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</body>
+</html>
